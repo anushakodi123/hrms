@@ -1,60 +1,63 @@
 from hrms.prst import model
 from sqlmodel import Session, select
+import fastapi as fa
+import typing as ty
+
+
+def _session():
+    with Session(model.engine) as session:
+        yield session
+        session.commit()
+
 
 class Employee:
+    def __init__(
+        self,
+        session: ty.Annotated[
+            Session,
+            fa.Depends(_session),
+        ],
+    ):
+        self.session = session
+
     def list(self):
-        with Session(model.engine) as session:
-            statement = select(model.Employee)
-            results = session.exec(statement)
-            employees = results.all()
-            return employees
-        
+        statement = select(model.Employee)
+        results = self.session.exec(statement)
+        employees = results.all()
+        return employees
+
     def get(self, id: int):
-        with Session(model.engine) as session:
-            statement = select(model.Employee).where(model.Employee.id == id)
-            results = session.exec(statement)
-            record = results.first()
-            if record is not None:
-                return record
-            else:
-                return {"message": "record not found"}
+        employee = self.session.get(model.Employee, id)
+        return employee
 
-    def add(self, name: str, designation: str, reports_to: int, project: str):
-        employee = model.Employee(name=name, designation=designation, reports_to=reports_to, project=project)
-        with Session(model.engine) as session:
-            session.add(employee)
-            session.commit()
-            return {"message": "employee added successfully"}
+    def add(self, employee_data: model.Employee):
+        employee = model.Employee(
+            name=employee_data.name,
+            designation=employee_data.designation,
+            reports_to=employee_data.reports_to,
+            project=employee_data.project,
+        )
+        self.session.add(employee)
 
-    def edit(self, id: int, name: str = None, designation: str = None, reports_to: int = None, project: str = None):
-        with Session(model.engine) as session:
-            statement = select(model.Employee).where(model.Employee.id == id)
-            results = session.exec(statement)
-            employee = results.one()
-            if employee is not None:
-                if name is not None:
-                    employee.name = name
-                if designation is not None:
-                    employee.designation = designation
-                if reports_to is not None:
-                    employee.reports_to = reports_to
-                if project is not None:
-                    employee.project = project
-                session.add(employee)
-                session.commit()
-                session.refresh(employee)
-                return employee
-            else:
-                return {"message": "record not found"}
+    def edit(self, id: int, employee_data: model.Employee):
+        employee = self.session.get(model.Employee, id)
+        if employee is not None:
+            if employee_data.name is not None:
+                employee.name = employee_data.name
+            if employee_data.designation is not None:
+                employee.designation = employee_data.designation
+            if employee_data.reports_to is not None:
+                employee.reports_to = employee_data.reports_to
+            if employee_data.project is not None:
+                employee.project = employee_data.project
+            self.session.add(employee)
+            self.session.refresh(employee)
+            return employee
+        else:
+            return {"message": "record not found"}
 
     def remove(self, id: int):
-        with Session(model.engine) as session:
-            statement = select(model.Employee).where(model.Employee.id == id)
-            results = session.exec(statement)
-            employee = results.one()
-            if employee is not None:
-                session.delete(employee)
-                session.commit()
-                return {"message": "record deleted"}
-            else:
-                return {"message": "record not found"}
+        employee = self.session.get(model.Employee, id)
+        if employee is not None:
+            self.session.delete(employee)
+            return employee
