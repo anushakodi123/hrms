@@ -1,11 +1,13 @@
 import fastapi as fa
-from hrms.api import ping, employee
-from hrms.graphql import employeee, sample
+from hrms.api import holiday, ping, employee, attendance,leave
+from hrms.graphql import schema
 
 
 app = fa.FastAPI()
 
 app.include_router(ping.router, prefix="/ping")
 app.include_router(employee.router, prefix="/employee")
-app.include_router(sample.graphql_app, prefix="/graphql")
-app.include_router(employeee.graphql_schema2, prefix="/graphql1")
+app.include_router(attendance.router, prefix="/attendance")
+app.include_router(leave.router, prefix="/leave")
+app.include_router(holiday.router, prefix="/holiday")
+app.include_router(schema.router, prefix="/graphql")

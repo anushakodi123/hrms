@@ -38,6 +38,7 @@ class Employee:
             project=employee_data.project,
         )
         self.session.add(employee)
+        return employee
 
     def edit(self, id: int, employee_data: model.Employee):
         employee = self.session.get(model.Employee, id)

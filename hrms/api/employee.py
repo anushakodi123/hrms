@@ -2,7 +2,6 @@ import fastapi as fa
 from hrms.svc import employee
 import typing as ty
 import pydantic as pyd
-from hrms.graphql import sample
 
 
 class Employee(pyd.BaseModel):
