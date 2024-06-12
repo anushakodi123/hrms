@@ -1,22 +1,10 @@
-from email.headerregistry import DateHeader
 import strawberry
 from hrms.prst import model
-from sqlmodel import Session, select
+from sqlmodel import Session
 from strawberry.fastapi import GraphQLRouter
 from typing import List, Optional
-from sqlalchemy import desc
-from contextlib import contextmanager
 from datetime import datetime
 from hrms.svc.leave import Leave
-
-# @contextmanager
-# def get_session():
-#     session = Session(model.engine)
-#     try:
-#         yield session
-#     finally:
-#         session.commit()
-
 
 @strawberry.input
 class LeaveTypeInput:
@@ -43,30 +31,30 @@ class LeaveType:
 class Query:
     @strawberry.field
     def list_leaves(self) -> List[LeaveType]:
-        leaves = Leave(session=Session(model.engine)).list()
-        return [LeaveType.from_model(leave) for leave in leaves]
+        with Session(model.engine) as session:
+            leaves = Leave(session=session).list()
+            return [LeaveType.from_model(leave) for leave in leaves]
 
 
 @strawberry.type
 class Mutation:
     @strawberry.mutation
     def create_leaves(self, leave_data: LeaveTypeInput) -> LeaveType:
-        leave = Leave(session=Session(model.engine)).add(leave_data)
-        # session.commit()
-        # statement = select(model.Employee).order_by(desc(model.Employee.id)).limit(1)
-        # result = session.exec(statement)
-        # created_employee = result.first()
-        return LeaveType.from_model(leave)
+        with Session(model.engine) as session:
+            leave = Leave(session=session).add(leave_data)
+            return LeaveType.from_model(leave)
 
     @strawberry.mutation
     def edit_leave(self, id: int, leave_data: LeaveTypeInput) -> Optional[LeaveType]:
-        leave = Leave(session=Session(model.engine)).edit(id, leave_data)
-        return LeaveType.from_model(leave)
+        with Session(model.engine) as session:
+            leave = Leave(session=session).edit(id, leave_data)
+            return LeaveType.from_model(leave)
 
     @strawberry.mutation
     def delete_leave(self, id: int) -> Optional[LeaveType]:
-        leave = Leave(session=Session(model.engine)).remove(id)
-        return LeaveType.from_model(leave)
+        with Session(model.engine) as session:
+            leave = Leave(session=session).remove(id)
+            return LeaveType.from_model(leave)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

@@ -52,6 +52,7 @@ class Employee:
             if employee_data.project is not None:
                 employee.project = employee_data.project
             self.session.add(employee)
+            self.session.commit()
             self.session.refresh(employee)
             return employee
         else:

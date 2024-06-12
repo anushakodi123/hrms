@@ -1,22 +1,11 @@
 import datetime
 import strawberry
 from hrms.prst import model
-from sqlmodel import Session, select
+from sqlmodel import Session
 from strawberry.fastapi import GraphQLRouter
 from typing import List, Optional
-from sqlalchemy import desc
-from contextlib import contextmanager
 from datetime import datetime
 from hrms.svc.holiday import Holiday
-
-# @contextmanager
-# def get_session():
-#     session = Session(model.engine)
-#     try:
-#         yield session
-#     finally:
-#         session.commit()
-
 
 @strawberry.input
 class HolidayTypeInput:
@@ -39,28 +28,32 @@ class HolidayType:
 class Query:
     @strawberry.field
     def list_holidays(self) -> List[HolidayType]:
-        holidays = Holiday(session=Session(model.engine)).list()
-        return [HolidayType.from_model(holi) for holi in holidays]
+        with Session(model.engine) as session:
+            holidays = Holiday(session=session).list()
+            return [HolidayType.from_model(holi) for holi in holidays]
 
 
 @strawberry.type
 class Mutation:
     @strawberry.mutation
     def create_holidays(self, holiday_data: HolidayTypeInput) -> HolidayType:
-        created_holiday = Holiday(session=Session(model.engine)).add(holiday_data)
-        return HolidayType.from_model(created_holiday)
+        with Session(model.engine) as session:
+            created_holiday = Holiday(session=session).add(holiday_data)
+            return HolidayType.from_model(created_holiday)
 
     @strawberry.mutation
     def edit_holiday(
         self, id: int, holiday_data: HolidayTypeInput
     ) -> Optional[HolidayType]:
-        holiday = Holiday(session=Session(model.engine)).edit(id, holiday_data)
-        return HolidayType.from_model(holiday)
+        with Session(model.engine) as session:
+            holiday = Holiday(session=session).edit(id, holiday_data)
+            return HolidayType.from_model(holiday)
 
     @strawberry.mutation
     def delete_holiday(self, id: int) -> Optional[HolidayType]:
-        holiday = Holiday(session=Session(model.engine)).remove(id)
-        return HolidayType.from_model(holiday)
+        with Session(model.engine) as session:
+            holiday = Holiday(session=session).remove(id)
+            return HolidayType.from_model(holiday)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

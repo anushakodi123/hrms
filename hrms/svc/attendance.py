@@ -49,6 +49,7 @@ class AttendanceLog:
             if attendance_data.time is not None:
                 attendance.time = attendance_data.time
             self.session.add(attendance)
+            self.session.commit()
             self.session.refresh(attendance)
             return attendance
         else:

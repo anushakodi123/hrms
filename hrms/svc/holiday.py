@@ -47,6 +47,7 @@ class Holiday:
             if holiday_data.on is not None:
                 holiday.on = holiday_data.on
             self.session.add(holiday)
+            self.session.commit()
             self.session.refresh(holiday)
             return holiday
         else:

@@ -50,6 +50,7 @@ class Leave:
             if leave_data.time is not None:
                 leave.time =leave_data.time
             self.session.add(leave)
+            self.session.commit()
             self.session.refresh(leave)
             return leave
         else:
